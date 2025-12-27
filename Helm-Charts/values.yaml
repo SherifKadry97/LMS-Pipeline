@@ -1,0 +1,62 @@
+# Global settings
+global:
+  namespace: default
+
+# Flask Application
+flask:
+  replicaCount: 3
+  image:
+    repository: flask-app
+    tag: local
+    pullPolicy: Never
+  service:
+    type: NodePort
+    port: 5000
+    targetPort: 5000
+    nodePort: 30000
+  env:
+    FLASK_APP: "run.py"
+    FLASK_RUN_HOST: "0.0.0.0"
+    SECRET_KEY: "dev-secret-key"
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxSurge: 1
+      maxUnavailable: 0
+  probes:
+    readiness:
+      path: "/"
+      port: 5000
+      initialDelaySeconds: 10
+      periodSeconds: 5
+    liveness:
+      path: "/"
+      port: 5000
+      initialDelaySeconds: 30
+      periodSeconds: 10
+
+# MSSQL Database
+mssql:
+  enabled: true
+  image:
+    repository: mcr.microsoft.com/mssql/server
+    tag: 2022-latest
+  service:
+    type: ClusterIP
+    port: 1433
+    targetPort: 1433
+  persistence:
+    enabled: true
+    size: 1Gi
+    accessMode: ReadWriteOnce
+  env:
+    ACCEPT_EULA: "Y"
+    MSSQL_PID: "Express"
+
+# Secrets Configuration
+secrets:
+  db:
+    username: "sa"
+    password: "YourStrong!Passw0rd"
+    host: "mssql-service"
+    database: "master"

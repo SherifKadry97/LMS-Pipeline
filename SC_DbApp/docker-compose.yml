@@ -1,0 +1,32 @@
+version: "3.9"
+
+services:
+  db:
+    image: mcr.microsoft.com/mssql/server:2022-latest
+    container_name: mssql_db
+    environment:
+      - ACCEPT_EULA=Y
+      - SA_PASSWORD=YourStrong!Passw0rd
+      - MSSQL_PID=Express
+    ports:
+      - "1433:1433"
+    volumes:
+      - mssql_data:/var/opt/mssql
+
+  web:
+    build: .
+    container_name: flask_app
+    depends_on:
+      - db
+    environment:
+      - DB_SERVER=mssql_db
+      - DB_NAME=master
+      - DB_USER=sa
+      - DB_PASSWORD=YourStrong!Passw0rd
+      - FLASK_APP=run.py
+      - FLASK_RUN_HOST=0.0.0.0
+    ports:
+      - "5000:5000"
+
+volumes:
+  mssql_data:

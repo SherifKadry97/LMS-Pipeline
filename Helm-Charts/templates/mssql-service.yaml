@@ -1,0 +1,13 @@
+{{- if .Values.mssql.enabled }}
+apiVersion: v1
+kind: Service
+metadata:
+  name: mssql-service
+spec:
+  selector:
+    app: mssql-db
+  ports:
+  - port: {{ .Values.mssql.service.port }}
+    targetPort: {{ .Values.mssql.service.targetPort }}
+  type: {{ .Values.mssql.service.type }}
+{{- end }}

@@ -1,0 +1,77 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: flask-app
+spec:
+  replicas: {{ .Values.flask.replicaCount }}
+  strategy:
+    type: {{ .Values.flask.strategy.type }}
+    rollingUpdate:
+      maxSurge: {{ .Values.flask.strategy.rollingUpdate.maxSurge }}
+      maxUnavailable: {{ .Values.flask.strategy.rollingUpdate.maxUnavailable }}
+  selector:
+    matchLabels:
+      app: flask-app
+  template:
+    metadata:
+      labels:
+        app: flask-app
+    spec:
+      containers:
+      - name: flask-app
+        image: "{{ .Values.flask.image.repository }}:{{ .Values.flask.image.tag }}"
+        imagePullPolicy: {{ .Values.flask.image.pullPolicy }}
+        env:
+        - name: DB_SERVER
+          valueFrom:
+            secretKeyRef:
+              name: db-secret
+              key: host
+        - name: DB_NAME
+          valueFrom:
+            secretKeyRef:
+              name: db-secret
+              key: database
+        - name: DB_USER
+          valueFrom:
+            secretKeyRef:
+              name: db-secret
+              key: username
+        - name: DB_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: db-secret
+              key: password
+        - name: FLASK_APP
+          value: {{ .Values.flask.env.FLASK_APP | quote }}
+        - name: FLASK_RUN_HOST
+          value: {{ .Values.flask.env.FLASK_RUN_HOST | quote }}
+        - name: SECRET_KEY
+          value: {{ .Values.flask.env.SECRET_KEY | quote }}
+        ports:
+        - containerPort: 5000
+        readinessProbe:
+          httpGet:
+            path: {{ .Values.flask.probes.readiness.path | quote }}
+            port: {{ .Values.flask.probes.readiness.port }}
+          initialDelaySeconds: {{ .Values.flask.probes.readiness.initialDelaySeconds }}
+          periodSeconds: {{ .Values.flask.probes.readiness.periodSeconds }}
+        livenessProbe:
+          httpGet:
+            path: {{ .Values.flask.probes.liveness.path | quote }}
+            port: {{ .Values.flask.probes.liveness.port }}
+          initialDelaySeconds: {{ .Values.flask.probes.liveness.initialDelaySeconds }}
+          periodSeconds: {{ .Values.flask.probes.liveness.periodSeconds }}
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: flask-app-service
+spec:
+  selector:
+    app: flask-app
+  ports:
+  - port: {{ .Values.flask.service.port }}
+    targetPort: {{ .Values.flask.service.targetPort }}
+    nodePort: {{ .Values.flask.service.nodePort }}
+  type: {{ .Values.flask.service.type }}

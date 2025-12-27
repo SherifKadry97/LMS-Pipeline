@@ -1,0 +1,37 @@
+{{- if .Values.mssql.enabled }}
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: mssql-db
+spec:
+  selector:
+    matchLabels:
+      app: mssql-db
+  template:
+    metadata:
+      labels:
+        app: mssql-db
+    spec:
+      containers:
+      - name: mssql
+        image: "{{ .Values.mssql.image.repository }}:{{ .Values.mssql.image.tag }}"
+        env:
+        - name: ACCEPT_EULA
+          value: {{ .Values.mssql.env.ACCEPT_EULA | quote }}
+        - name: SA_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: db-secret
+              key: password
+        - name: MSSQL_PID
+          value: {{ .Values.mssql.env.MSSQL_PID | quote }}
+        ports:
+        - containerPort: 1433
+        volumeMounts:
+        - name: mssql-storage
+          mountPath: /var/opt/mssql
+      volumes:
+      - name: mssql-storage
+        persistentVolumeClaim:
+          claimName: mssql-data-pvc
+{{- end }}

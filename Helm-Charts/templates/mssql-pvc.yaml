@@ -1,0 +1,12 @@
+{{- if .Values.mssql.persistence.enabled }}
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: mssql-data-pvc
+spec:
+  accessModes:
+    - {{ .Values.mssql.persistence.accessMode }}
+  resources:
+    requests:
+      storage: {{ .Values.mssql.persistence.size }}
+{{- end }}
